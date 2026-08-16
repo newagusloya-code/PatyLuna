@@ -1,10 +1,10 @@
 # Paty Luna (SleepWell) 🌙 🎧
 
-Paty Luna is a full-stack wellness app with a Therapy Room powered by five AI personas, a private diary, therapeutic audio, sleep tools, and Pomodoro sessions. The backend uses FastAPI, SQLAlchemy, and JWT authentication; the frontend is a Vanilla JavaScript SPA bundled with Vite.
+Paty Luna is a full-stack wellness app with a Therapy Room powered by five AI agents - empathetic listener, tough coach, sleep analyst, mindfulness guide, and productivity mentor - plus a private diary, therapeutic audio, sleep tools, and Pomodoro sessions. The backend uses FastAPI, SQLAlchemy, and JWT authentication; the frontend is a Vanilla JavaScript SPA bundled with Vite.
 
 ## Features
 
-- **Therapy Room:** chat with an empathetic listener, tough coach, sleep analyst, mindfulness guide, or productivity mentor.
+- **Therapy Room:** chat with five AI agents - an empathetic listener, tough coach, sleep analyst, mindfulness guide, and productivity mentor.
 - **Private Diary:** encrypted entries and AI conversation history scoped to the authenticated user.
 - **Sleep & Focus Tools:** therapeutic audio, a sleep sanctuary, and Pomodoro sessions.
 - **Security:** JWT auth, bcrypt passwords, rate limiting, restrictive CORS, security headers, and ownership checks.
