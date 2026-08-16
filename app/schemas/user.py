@@ -17,6 +17,13 @@ class UserRegister(BaseModel):
     username: str = Field(min_length=3, max_length=64)
     password: str = Field(min_length=8, max_length=128)
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def reject_display_name_email(cls, v: object) -> object:
+        if isinstance(v, str) and (v != v.strip() or re.search(r"[<>()[\]]", v)):
+            raise ValueError("Email must be a plain address without a display name")
+        return v
+
     @field_validator("username")
     @classmethod
     def username_alphanumeric(cls, v: str) -> str:
@@ -45,6 +52,13 @@ class UserLogin(BaseModel):
     """Payload for ``POST /auth/login``."""
     email: EmailStr
     password: str = Field(min_length=1, max_length=128)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def reject_display_name_email(cls, v: object) -> object:
+        if isinstance(v, str) and (v != v.strip() or re.search(r"[<>()[\]]", v)):
+            raise ValueError("Email must be a plain address without a display name")
+        return v
 
 
 # ── Response Schemas ─────────────────────────────────────────────────────────

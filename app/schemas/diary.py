@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ── Request Schemas ──────────────────────────────────────────────────────────
@@ -53,7 +53,29 @@ class DiaryMessageResponse(BaseModel):
 class AIChatRequest(BaseModel):
     """Payload for POST /diary/{id}/chat"""
     content: str = Field(..., min_length=1, max_length=10_000)
-    selected_agents: list[str] = Field(..., min_items=1, max_items=5)
+    selected_agents: list[Literal[
+        "empathetic_listener",
+        "tough_coach",
+        "sleep_analyst",
+        "mindfulness_guide",
+        "productivity_mentor",
+    ]] = Field(..., min_length=1, max_length=5)
+
+    @field_validator("selected_agents", mode="before")
+    @classmethod
+    def validate_agent_types(cls, value: object) -> object:
+        allowed = {
+            "empathetic_listener",
+            "tough_coach",
+            "sleep_analyst",
+            "mindfulness_guide",
+            "productivity_mentor",
+        }
+        if isinstance(value, list):
+            invalid = [agent for agent in value if agent not in allowed]
+            if invalid:
+                raise ValueError(f"agent_type is not supported: {invalid[0]}")
+        return value
 
 
 # Rebuild model to resolve forward references

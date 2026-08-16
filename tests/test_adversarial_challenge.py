@@ -256,7 +256,12 @@ class TestRateLimitingEnforcementAndRecovery:
             "username": "ratelimit_login",
             "password": "SecurePassword1!",
         }
-        await helper_register_user(client, user_payload["email"], user_payload["username"])
+        await helper_register_user(
+            client,
+            user_payload["email"],
+            user_payload["username"],
+            user_payload["password"],
+        )
 
         statuses = []
         for i in range(12):

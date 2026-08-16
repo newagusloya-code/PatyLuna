@@ -13,7 +13,7 @@ from __future__ import annotations
 import uuid
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from slowapi.errors import RateLimitExceeded
@@ -144,6 +144,8 @@ if os.path.exists(FRONTEND_DIST):
     
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
+        if full_path == "api" or full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not Found")
         # Serve specific files if requested directly and they exist
         target_path = os.path.join(FRONTEND_DIST, full_path)
         if os.path.isfile(target_path):
@@ -154,5 +156,7 @@ if os.path.exists(FRONTEND_DIST):
 else:
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa_fallback(full_path: str):
+        if full_path == "api" or full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not Found")
         # Fallback if frontend is not built
         return {"error": "Frontend build not found. Please run 'npm run build' in the frontend directory."}

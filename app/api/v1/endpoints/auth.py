@@ -7,6 +7,7 @@ brute-force attacks.
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import (
@@ -81,7 +82,14 @@ async def register(
         hashed_password=hashed_pwd,
     )
     db.add(user)
-    await db.flush()
+    try:
+        await db.flush()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email or username already exists",
+        )
     await db.refresh(user)
     return user
 

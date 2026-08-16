@@ -1,85 +1,70 @@
 # Paty Luna (SleepWell) 🌙 🎧
 
-> **Paty Luna (SleepWell API) is a full-stack web app providing therapeutic sound frequencies and a digital sleep sanctuary. It features a secure, high-performance backend built with FastAPI, SQLAlchemy, and JWT Auth, paired with a lightning-fast Vanilla JS SPA frontend powered by Vite and a custom audio playback engine.**
+Paty Luna is a full-stack wellness app with a Therapy Room powered by five AI personas, a private diary, therapeutic audio, sleep tools, and Pomodoro sessions. The backend uses FastAPI, SQLAlchemy, and JWT authentication; the frontend is a Vanilla JavaScript SPA bundled with Vite.
 
-A holistic full-stack web application designed to provide therapeutic sound frequencies, relief for tinnitus, and a digital sleep sanctuary. This platform delivers a seamless, responsive auditory experience securely backed by a modern Python API.
+## Features
 
-## ✨ Features
+- **Therapy Room:** chat with an empathetic listener, tough coach, sleep analyst, mindfulness guide, or productivity mentor.
+- **Private Diary:** encrypted entries and AI conversation history scoped to the authenticated user.
+- **Sleep & Focus Tools:** therapeutic audio, a sleep sanctuary, and Pomodoro sessions.
+- **Security:** JWT auth, bcrypt passwords, rate limiting, restrictive CORS, security headers, and ownership checks.
+- **Async API:** FastAPI and SQLAlchemy 2.0 with PostgreSQL or SQLite.
 
-- **Therapeutic Audio Engine:** Custom audio playback capabilities designed for sleep induction and tinnitus relief (built with Vanilla JS).
-- **Secure Authentication:** Robust JWT-based user authentication, password hashing (bcrypt), and secure session management.
-- **Rate Limiting & Security:** Integrated API rate-limiting via Redis (`slowapi`), restrictive CORS, and strict security headers to prevent XSS and Host header attacks.
-- **Modern SPA Frontend:** Lightning-fast, lightweight Vanilla JavaScript frontend bundled with Vite.
-- **Robust Backend:** High-performance, asynchronous REST API powered by FastAPI and SQLAlchemy 2.0.
-- **End-to-End Tested:** Includes comprehensive automated integration testing for auth lifecycles.
+## Stack
 
-## 🛠️ Technology Stack
+- Frontend: Vanilla JavaScript, Vite, HTML5, CSS
+- Backend: Python 3.10+, FastAPI, SQLAlchemy, Alembic
+- Services: PostgreSQL/SQLite, Redis (optional for rate limiting)
+- Deployment: Docker, Render (`render.yaml`), Fly.io (`fly.toml`), or Vercel for the frontend
 
-**Frontend**
-- Vanilla JavaScript (ES6 Modules)
-- Vite (Build Tool & Dev Server)
-- HTML5 / Native CSS
+## Local development
 
-**Backend**
-- Python 3.x
-- [FastAPI](https://fastapi.tiangolo.com/) (REST API framework)
-- [SQLAlchemy](https://www.sqlalchemy.org/) + Alembic (Async ORM & Database Migrations)
-- PostgreSQL / SQLite (Database)
-- Redis (Rate Limiting)
+Prerequisites: Python 3.10+, Node.js/npm, and optionally Redis.
 
-**Deployment / DevOps**
-- Docker (Containerization)
-- `fly.toml` / `render.yaml` (Pre-configured for cloud deployments)
-- Uvicorn / Gunicorn (ASGI Servers)
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Python 3.10+
-- Node.js & npm
-- Redis (Optional, for rate-limiting)
-
-### Backend Setup
-1. Navigate to the root directory and create a virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Set up environment variables by copying the example file:
-   ```bash
-   cp .env.example .env
-   ```
-4. Run the database migrations (if configured) or let the startup script create the local `test.db`.
-5. Start the FastAPI backend:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-### Frontend Setup
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-
-## 🧪 Testing
-
-The repository includes end-to-end (E2E) integration tests to ensure the stability of critical paths like Authentication.
-
-To run the verification suite:
 ```bash
-pytest
-# or run the standalone script:
-python verify_auth_e2e.py
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 ```
+
+For local SQLite, set `DATABASE_URL=sqlite+aiosqlite:///./test.db` in `.env`. Use PostgreSQL for production. The app creates development tables on startup.
+
+Start the backend on port `8000`:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Start the frontend on port `3000` in a second terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The Therapy Room is available at `http://localhost:3000/#/therapy` after signing in. It loads the five agents from `/api/v1/ai/agents`; a conversation creates a diary entry and uses `/api/v1/ai/diary/{id}/chat`. Set `AI_PROVIDER=mock` for a local smoke test without an API key. If the API is hosted separately, set `VITE_API_BASE_URL` to its public URL before building.
+
+## Verification
+
+From the repository root:
+
+```bash
+venv/bin/python -m pytest -q
+```
+
+Build the frontend bundle:
+
+```bash
+cd frontend
+npm run build
+```
+
+## Deployment
+
+The repository includes `Dockerfile`, `render.yaml`, and `fly.toml` for backend/monolith deployment. For a separate Vercel frontend project, set the project root to `frontend`, build with `npm run build`, publish `dist`, and configure `VITE_API_BASE_URL` to the deployed API URL. Store `JWT_SECRET_KEY`, `ENCRYPTION_KEY`, database credentials, and AI keys in the platform secret manager. Never commit `.env`.
+
+## Repository hygiene
+
+Do not commit `.env`, secrets, `test.db`, `venv`, `node_modules`, or `frontend/dist`.
