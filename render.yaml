@@ -1,0 +1,57 @@
+services:
+  # ── PostgreSQL Database ────────────────────────────────────────────────────
+  - type: pgo
+    name: sleepwell-db
+    plan: free
+    postgresMajorVersion: 15
+    databaseName: sleepwelldb
+    user: sleepwelluser
+
+  # ── Redis Cache ────────────────────────────────────────────────────────────
+  - type: redis
+    name: sleepwell-redis
+    plan: free
+    ipAllowList: []
+
+  # ── FastAPI Backend ────────────────────────────────────────────────────────
+  - type: web
+    name: sleepwell-api
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt && pip install gunicorn"
+    startCommand: "bash start.sh"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sleepwell-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: sleepwell-redis
+          property: connectionString
+      - key: ENVIRONMENT
+        value: "production"
+      - key: CORS_ORIGINS
+        value: "https://sleepwell-frontend.vercel.app" # Replace with actual frontend URL
+      # Secrets must be set manually in the Render Dashboard
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: JWT_SECRET_KEY
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+
+  # ── Vanilla JS Frontend (Optional if deployed on Vercel) ───────────────────
+  - type: web
+    name: sleepwell-frontend
+    env: node
+    plan: free
+    buildCommand: "cd frontend && npm install && npm run build"
+    startCommand: "npx serve frontend/dist"
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: sleepwell-api
+          property: host

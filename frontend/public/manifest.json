@@ -1,0 +1,22 @@
+{
+  "name": "Paty Luna",
+  "short_name": "Paty Luna",
+  "description": "Frecuencias sanadoras, alivio de tinnitus y santuario del sueño para Patricia.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0d16",
+  "theme_color": "#0a0d16",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/moon-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/moon-icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

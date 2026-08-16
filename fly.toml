@@ -1,0 +1,36 @@
+# Fly.io configuration for sleepwell-app
+app = "sleepwell-app"
+primary_region = "sjc"  # Change to your nearest region (iad, lax, ord, etc.)
+
+[build]
+dockerfile = "Dockerfile"
+
+[env]
+PORT = "8000"
+
+[deploy]
+max_concurrency = 1
+strategy = "immediate"
+
+[[services]]
+protocol = "tcp"
+internal_port = 8000
+processes = ["app"]
+
+  [[services.ports]]
+  port = 80
+  handlers = ["http"]
+  force_https = true
+
+  [[services.ports]]
+  port = 443
+  handlers = ["tls", "http"]
+
+[[services.http_checks]]
+uri = "/"
+interval = 10000
+timeout = 5000
+grace_period = "10s"
+method = "get"
+protocol = "http"
+restart_limit = 3
