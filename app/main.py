@@ -34,8 +34,9 @@ async def lifespan(app: FastAPI):
     try:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
-    except Exception:
-        pass
+    except Exception as exc:
+        import logging
+        logging.getLogger("uvicorn.error").warning("Database table auto-creation notice: %s", exc)
     yield
     await engine.dispose()
 
@@ -63,6 +64,24 @@ app = FastAPI(
 app.state.limiter = limiter
 from slowapi import _rate_limit_exceeded_handler
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+from fastapi.responses import JSONResponse
+import logging
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    import traceback
+    logging.getLogger("uvicorn.error").error(
+        "Unhandled error on %s %s: %s\n%s",
+        request.method,
+        request.url.path,
+        exc,
+        traceback.format_exc(),
+    )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Error interno del servidor. Por favor intenta de nuevo o revisa la conexión."},
+    )
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -128,11 +147,16 @@ async def health_check():
 # ────────────────────────────────────────────────────────────────────────────
 
 import os
+from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 # Check if the frontend build directory exists
-FRONTEND_DIST = os.path.join(os.getcwd(), "frontend", "dist")
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+FRONTEND_DIST = os.environ.get(
+    "FRONTEND_DIST",
+    str(_PROJECT_ROOT / "frontend" / "dist") if (_PROJECT_ROOT / "frontend" / "dist").exists() else os.path.join(os.getcwd(), "frontend", "dist")
+)
 
 if os.path.exists(FRONTEND_DIST):
     # Mount static files (JS, CSS, images)
