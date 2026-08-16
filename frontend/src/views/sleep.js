@@ -14,7 +14,7 @@ export class SleepView {
 
   async loadActiveAndPastSessions() {
     try {
-      const res = await api('/sleep');
+      const res = await api('/sleep/');
       if (res.ok) {
         this.sleepHistory = await res.json();
         // Verificar si hay una sesión activa sin terminar
@@ -110,7 +110,7 @@ export class SleepView {
     }
 
     try {
-      const res = await api('/sleep', {
+      const res = await api('/sleep/', {
         method: 'POST',
         body: {
           sound_preset: soundPreset,
@@ -133,22 +133,23 @@ export class SleepView {
   async endSleepSession(rating, notes) {
     if (!this.currentSession) return;
     try {
-      const res = await api(`/sleep/${this.currentSession.id}/end`, {
-        method: 'PATCH',
-        body: {
-          quality_rating: rating,
-          notes: notes,
-        },
-      });
+      if (this.currentSession.id !== 'mock') {
+        const res = await api(`/sleep/${this.currentSession.id}/end`, {
+          method: 'PATCH',
+          body: {
+            quality_rating: rating,
+            notes: notes,
+          },
+        });
 
-      if (res.ok) {
-        this.currentSession = null;
-        soundEngine.stopAll();
-        await this.loadActiveAndPastSessions();
-        this.render();
-      } else {
-        throw new Error('API request failed');
+        if (!res.ok) {
+          throw new Error('API request failed');
+        }
       }
+      this.currentSession = null;
+      soundEngine.stopAll();
+      await this.loadActiveAndPastSessions();
+      this.render();
     } catch (err) {
       console.error('Error al finalizar sesión, usando respaldo:', err);
       // Fallback

@@ -79,7 +79,7 @@ class DiaryEntry(Base):
 
     # Relationships
     author: Mapped["User"] = relationship(back_populates="diary_entries")
-    ai_feedbacks: Mapped[list["AIFeedback"]] = relationship(back_populates="diary_entry", cascade="all, delete-orphan")
+    messages: Mapped[list["DiaryMessage"]] = relationship(back_populates="diary_entry", cascade="all, delete-orphan", order_by="DiaryMessage.created_at")
 
     __table_args__ = (
         Index("ix_diary_user_created", "user_id", "created_at"),
@@ -87,26 +87,25 @@ class DiaryEntry(Base):
 
 
 # ────────────────────────────────────────────────────────────────────────────
-# AI Feedback
+# Diary Message (Chat thread)
 # ────────────────────────────────────────────────────────────────────────────
 
-class AIFeedback(Base):
-    __tablename__ = "ai_feedbacks"
+class DiaryMessage(Base):
+    __tablename__ = "diary_messages"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     diary_entry_id: Mapped[int] = mapped_column(ForeignKey("diary_entries.id", ondelete="CASCADE"), nullable=False)
 
-    agent_type: Mapped[str] = mapped_column(String(64), nullable=False)
-    # Agent types: "empathetic_listener", "tough_coach", "sleep_analyst",
-    #              "mindfulness_guide", "productivity_mentor"
+    role: Mapped[str] = mapped_column(String(16), nullable=False) # "user" or "agent"
+    agent_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True) # e.g. "tough_coach", null if user
 
-    # Feedback is also encrypted since it references diary content
-    encrypted_feedback: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    # Content is AES-256-GCM encrypted
+    encrypted_content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     # Relationships
-    diary_entry: Mapped["DiaryEntry"] = relationship(back_populates="ai_feedbacks")
+    diary_entry: Mapped["DiaryEntry"] = relationship(back_populates="messages")
 
 
 # ────────────────────────────────────────────────────────────────────────────

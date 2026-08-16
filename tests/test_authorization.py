@@ -35,9 +35,9 @@ class TestCrossUserDiaryAndAIIsolation:
 
         # User B attempts to request AI feedback on User A's diary entry
         attack_resp = await client.post(
-            f"/api/v1/ai/diary/{user_a_entry_id}/feedback",
+            f"/api/v1/ai/diary/{user_a_entry_id}/chat",
             headers=user_b_headers,
-            json={"agent_type": "empathetic_listener"},
+            json={"content": "test message", "selected_agents": ["empathetic_listener"]},
         )
         assert attack_resp.status_code == 404, (
             f"Expected 404 Not Found to prevent data leakage, got: {attack_resp.status_code}"
@@ -61,15 +61,15 @@ class TestCrossUserDiaryAndAIIsolation:
         entry_id = entry["id"]
 
         ai_req = await client.post(
-            f"/api/v1/ai/diary/{entry_id}/feedback",
+            f"/api/v1/ai/diary/{entry_id}/chat",
             headers=user_a_headers,
-            json={"agent_type": "sleep_analyst"},
+            json={"content": "test message", "selected_agents": ["sleep_analyst"]},
         )
-        assert ai_req.status_code == 202
+        assert ai_req.status_code == 201
 
         # User B attempts to list AI feedbacks for User A's entry
         attack_resp = await client.get(
-            f"/api/v1/ai/diary/{entry_id}/feedback",
+            f"/api/v1/ai/diary/{entry_id}/chat",
             headers=user_b_headers,
         )
         assert attack_resp.status_code == 404, f"Expected 404, got: {attack_resp.status_code}"

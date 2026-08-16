@@ -38,15 +38,22 @@ class DiaryEntryResponse(BaseModel):
     is_public: bool
     created_at: datetime
     updated_at: datetime
-    ai_feedbacks: list["AIFeedbackResponse"] = []
+    messages: list["DiaryMessageResponse"] = []
 
 
-class AIFeedbackResponse(BaseModel):
-    """AI agent feedback attached to a diary entry."""
+class DiaryMessageResponse(BaseModel):
+    """A message in a diary chat thread (either from user or AI)."""
     id: int
-    agent_type: str
-    feedback: str  # decrypted
+    role: str
+    agent_type: Optional[str] = None
+    content: str  # decrypted
     created_at: datetime
+
+
+class AIChatRequest(BaseModel):
+    """Payload for POST /diary/{id}/chat"""
+    content: str = Field(..., min_length=1, max_length=10_000)
+    selected_agents: list[str] = Field(..., min_items=1, max_items=5)
 
 
 # Rebuild model to resolve forward references

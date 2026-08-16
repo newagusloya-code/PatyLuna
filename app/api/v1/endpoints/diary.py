@@ -11,9 +11,9 @@ from sqlalchemy.orm import selectinload
 
 from app.core.security import decrypt_text, encrypt_text, get_current_user_id
 from app.db.database import get_db
-from app.db.models import AIFeedback, DiaryEntry
+from app.db.models import DiaryMessage, DiaryEntry
 from app.schemas.diary import (
-    AIFeedbackResponse,
+    DiaryMessageResponse,
     DiaryEntryCreate,
     DiaryEntryResponse,
     DiaryEntryUpdate,
@@ -23,15 +23,16 @@ router = APIRouter(prefix="/diary", tags=["Diary"])
 
 
 def _entry_to_response(entry: DiaryEntry) -> DiaryEntryResponse:
-    """Decrypt content & feedback, then build the response model."""
-    feedbacks = []
-    for fb in entry.ai_feedbacks:
-        feedbacks.append(
-            AIFeedbackResponse(
-                id=fb.id,
-                agent_type=fb.agent_type,
-                feedback=decrypt_text(fb.encrypted_feedback),
-                created_at=fb.created_at,
+    """Decrypt content & messages, then build the response model."""
+    msgs = []
+    for m in entry.messages:
+        msgs.append(
+            DiaryMessageResponse(
+                id=m.id,
+                role=m.role,
+                agent_type=m.agent_type,
+                content=decrypt_text(m.encrypted_content),
+                created_at=m.created_at,
             )
         )
 
@@ -44,7 +45,7 @@ def _entry_to_response(entry: DiaryEntry) -> DiaryEntryResponse:
         is_public=entry.is_public,
         created_at=entry.created_at,
         updated_at=entry.updated_at,
-        ai_feedbacks=feedbacks,
+        messages=msgs,
     )
 
 
@@ -70,7 +71,7 @@ async def create_entry(
     )
     db.add(entry)
     await db.flush()
-    await db.refresh(entry, attribute_names=["ai_feedbacks"])
+    await db.refresh(entry, attribute_names=["messages"])
     return _entry_to_response(entry)
 
 
@@ -90,7 +91,7 @@ async def list_entries(
     result = await db.execute(
         select(DiaryEntry)
         .where(DiaryEntry.user_id == user_id)
-        .options(selectinload(DiaryEntry.ai_feedbacks))
+        .options(selectinload(DiaryEntry.messages))
         .order_by(DiaryEntry.created_at.desc())
         .offset(skip)
         .limit(limit)
@@ -114,7 +115,7 @@ async def get_entry(
     result = await db.execute(
         select(DiaryEntry)
         .where(DiaryEntry.id == entry_id, DiaryEntry.user_id == user_id)
-        .options(selectinload(DiaryEntry.ai_feedbacks))
+        .options(selectinload(DiaryEntry.messages))
     )
     entry = result.scalar_one_or_none()
     if not entry:
@@ -138,7 +139,7 @@ async def update_entry(
     result = await db.execute(
         select(DiaryEntry)
         .where(DiaryEntry.id == entry_id, DiaryEntry.user_id == user_id)
-        .options(selectinload(DiaryEntry.ai_feedbacks))
+        .options(selectinload(DiaryEntry.messages))
     )
     entry = result.scalar_one_or_none()
     if not entry:
@@ -154,7 +155,7 @@ async def update_entry(
         entry.tags = payload.tags
 
     await db.flush()
-    await db.refresh(entry, attribute_names=["ai_feedbacks"])
+    await db.refresh(entry, attribute_names=["messages"])
     return _entry_to_response(entry)
 
 

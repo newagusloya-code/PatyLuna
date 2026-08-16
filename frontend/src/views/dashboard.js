@@ -113,7 +113,7 @@ export class DashboardView {
         </div>
 
         <!-- 2. Santuario del Sueño / Noche -->
-        <div class="card interactive-card" style="cursor: pointer; padding: 24px; border: 1px solid var(--accent-calm); box-shadow: 0 0 15px rgba(129, 140, 248, 0.1);" onclick="window.location.hash='#/sleep'">
+        <div class="card interactive-card" style="margin-bottom: 24px; cursor: pointer; padding: 24px; border: 1px solid var(--accent-calm); box-shadow: 0 0 15px rgba(129, 140, 248, 0.1);" onclick="window.location.hash='#/sleep'">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
             <div style="display: flex; align-items: center; gap: 14px;">
               <div style="width: 52px; height: 52px; border-radius: 14px; background-color: rgba(129, 140, 248, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.6rem;">
@@ -129,11 +129,25 @@ export class DashboardView {
           <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 16px;">
             Guía de respiración 4-7-8, temporizador nocturno con desvanecimiento de sonido y registro matutino.
           </p>
-          <div style="display: flex; gap: 10px;">
-            <button class="btn primary" style="flex: 1; padding: 10px; font-size: 0.85rem;" onclick="event.stopPropagation(); window.location.hash='#/sleep';">
-              🌙 Ir a Modo Noche
-            </button>
+        </div>
+
+        <!-- 3. Therapy Room -->
+        <div class="card interactive-card" style="cursor: pointer; padding: 24px; border: 1px solid var(--border-color);" onclick="window.location.hash='#/therapy'">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="width: 52px; height: 52px; border-radius: 14px; background-color: rgba(251, 191, 36, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.6rem;">
+                🛋️
+              </div>
+              <div>
+                <h3 style="font-size: 1.3rem; color: var(--text-primary); margin-bottom: 2px;">Therapy Room</h3>
+                <span style="font-size: 0.8rem; color: #fbbf24; font-weight: 500;">Diario & IA</span>
+              </div>
+            </div>
+            <div style="font-size: 1.5rem; color: var(--text-secondary);">›</div>
           </div>
+          <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 0;">
+            Chatea con tus terapeutas de IA, explora tus emociones y obtén consejos en tiempo real.
+          </p>
         </div>
 
       </div>

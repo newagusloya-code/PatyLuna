@@ -31,8 +31,11 @@ from app.db.database import engine, Base
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Create tables on startup (dev only). Use Alembic migrations in prod."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception:
+        pass
     yield
     await engine.dispose()
 

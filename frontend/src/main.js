@@ -4,6 +4,7 @@ import { LoginView } from './views/auth.js';
 import { DashboardView } from './views/dashboard.js';
 import { SoundsView } from './views/sounds.js';
 import { SleepView } from './views/sleep.js';
+import { TherapyView } from './views/therapy.js';
 import { soundEngine } from './audio.js';
 
 // Define Routes
@@ -12,6 +13,7 @@ router.addRoute('/dashboard', DashboardView, { requiresAuth: true });
 router.addRoute('/login', LoginView, { guestOnly: true });
 router.addRoute('/sounds', SoundsView, { requiresAuth: true });
 router.addRoute('/sleep', SleepView, { requiresAuth: true });
+router.addRoute('/therapy', TherapyView, { requiresAuth: true });
 
 // Initial render shell with Android-friendly layout & bottom navigation
 document.querySelector('#app').innerHTML = `
@@ -44,7 +46,7 @@ document.querySelector('#app').innerHTML = `
       </button>
     </div>
 
-    <!-- Android Native Bottom Navigation Bar (3 items: Inicio, Sonidos, Noche) -->
+    <!-- Android Native Bottom Navigation Bar (4 items: Inicio, Sonidos, Therapy, Noche) -->
     <nav class="bottom-nav" id="bottom-bar">
       <a href="#/dashboard" class="nav-item active" data-path="/dashboard">
         <span class="nav-icon">🏠</span>
@@ -53,6 +55,10 @@ document.querySelector('#app').innerHTML = `
       <a href="#/sounds" class="nav-item" data-path="/sounds">
         <span class="nav-icon">🎧</span>
         <span class="nav-label">Sonidos</span>
+      </a>
+      <a href="#/therapy" class="nav-item" data-path="/therapy">
+        <span class="nav-icon">🛋️</span>
+        <span class="nav-label">Terapia</span>
       </a>
       <a href="#/sleep" class="nav-item" data-path="/sleep">
         <span class="nav-icon">🌙</span>

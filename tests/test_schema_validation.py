@@ -97,9 +97,9 @@ class TestAISchemaValidation:
 
         # Invalid agent_type string
         resp = await client.post(
-            f"/api/v1/ai/diary/{entry_id}/feedback",
+            f"/api/v1/ai/diary/{entry_id}/chat",
             headers=headers,
-            json={"agent_type": "evil_hacker_agent"},
+            json={"content": "test message", "selected_agents": ["evil_hacker_agent"]},
         )
         assert resp.status_code == 422
         assert "agent_type" in resp.text
@@ -109,9 +109,9 @@ class TestAISchemaValidation:
 
         # Non-integer path param
         resp = await client.post(
-            "/api/v1/ai/diary/not-an-integer-id/feedback",
+            "/api/v1/ai/diary/not-an-integer-id/chat",
             headers=headers,
-            json={"agent_type": "tough_coach"},
+            json={"content": "test message", "selected_agents": ["tough_coach"]},
         )
         assert resp.status_code == 422
 

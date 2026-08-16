@@ -73,7 +73,7 @@ class TestSystemStartupAndImports:
             "/api/v1/auth/me",
             "/api/v1/diary/",
             "/api/v1/diary/{entry_id}",
-            "/api/v1/ai/diary/{entry_id}/feedback",
+            "/api/v1/ai/diary/{entry_id}/chat",
             "/api/v1/ai/agents",
             "/api/v1/pomodoro/",
             "/api/v1/pomodoro/{session_id}/complete",
