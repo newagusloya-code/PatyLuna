@@ -62,7 +62,7 @@ class TestPIITransmissionSecurityBoundary:
         resp = await client.post(
             f"/api/v1/ai/diary/{entry_id}/chat",
             headers=headers,
-            json={"content": sensitive_entry_text, "selected_agents": ["mindfulness_guide"]},
+            json={"content": sensitive_entry_text, "selected_agents": ["sleep_analyst"]},
         )
         assert resp.status_code == 201
 

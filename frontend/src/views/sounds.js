@@ -8,9 +8,9 @@ export class SoundsView {
   }
 
   formatTime(seconds) {
-    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   }
 
   updateTimerUI() {
@@ -23,30 +23,27 @@ export class SoundsView {
       const timeStr = this.formatTime(soundEngine.timerSecondsRemaining);
       
       if (timerStatus) {
-        timerStatus.textContent = `${modeText} ${timeStr}`;
         timerStatus.style.display = 'block';
+        timerStatus.innerHTML = `⏱️ <strong>${modeText}</strong> ${timeStr}`;
       }
-
       if (visualTimer) {
-        visualTimer.textContent = timeStr;
         visualTimer.style.display = 'block';
-        if (soundEngine.isAlarmMode) {
-          visualTimer.style.color = 'var(--accent-focus)';
-        } else {
-          visualTimer.style.color = 'var(--text-primary)';
-        }
+        visualTimer.textContent = timeStr;
       }
-
-      // Visual pulse
-      if (soundEngine.isAlarmMode && orb) {
-        orb.style.boxShadow = '0 0 20px rgba(251, 191, 36, 0.4)';
+      if (soundEngine.isAlarmMode) {
+        this.container.querySelectorAll('.sleep-btn').forEach((b) => b.classList.remove('primary'));
+      } else {
+        this.container.querySelectorAll('.alarm-btn').forEach((b) => b.classList.remove('primary'));
       }
     } else {
       if (timerStatus) timerStatus.style.display = 'none';
-      if (visualTimer) {
-        visualTimer.textContent = '';
-        visualTimer.style.display = 'none';
+      if (visualTimer) visualTimer.style.display = 'none';
+      if (soundEngine.isAlarmMode && orb) {
+        orb.style.boxShadow = 'none';
       }
+      this.container.querySelectorAll('.timer-btn').forEach((b) => {
+        if (b.dataset.min !== '0') b.classList.remove('primary');
+      });
     }
   }
 
@@ -91,82 +88,66 @@ export class SoundsView {
 
             <button class="preset-btn ${this.selectedPreset === 'sueno432' ? 'active' : ''}" data-preset="sueno432" style="padding: 14px; text-align: left; border-radius: 12px; background: var(--bg-elevated); border: 1px solid ${this.selectedPreset === 'sueno432' ? 'var(--accent-calm)' : 'var(--border-color)'}; cursor: pointer;">
               <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">Sueño 432 Hz</div>
-              <div style="font-size: 0.75rem; color: var(--text-secondary);">Frecuencia Cósmica + Olas</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Frecuencia Cósmica + Ruido Marrón</div>
             </button>
 
             <button class="preset-btn ${this.selectedPreset === 'lluvia_paz' ? 'active' : ''}" data-preset="lluvia_paz" style="padding: 14px; text-align: left; border-radius: 12px; background: var(--bg-elevated); border: 1px solid ${this.selectedPreset === 'lluvia_paz' ? 'var(--accent-calm)' : 'var(--border-color)'}; cursor: pointer;">
               <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">Lluvia de Noche</div>
-              <div style="font-size: 0.75rem; color: var(--text-secondary);">Lluvia continua + Ruido Rosa</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Lluvia continua + Ruido Rosa + 432Hz</div>
             </button>
 
             <button class="preset-btn ${this.selectedPreset === 'paz528' ? 'active' : ''}" data-preset="paz528" style="padding: 14px; text-align: left; border-radius: 12px; background: var(--bg-elevated); border: 1px solid ${this.selectedPreset === 'paz528' ? 'var(--accent-calm)' : 'var(--border-color)'}; cursor: pointer;">
               <div style="font-weight: 600; font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">Paz 528 Hz</div>
-              <div style="font-size: 0.75rem; color: var(--text-secondary);">Tono de Sanación y Calma</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary);">Tono de Sanación y Serenidad</div>
             </button>
 
           </div>
         </div>
 
-        <!-- Mezclador Detallado de Capas -->
+        <!-- Mezclador de Capas (3 Capas Fundamentales) -->
         <div class="card" style="margin-bottom: 28px; padding: 20px;">
           <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
             <span>🎚️</span> Mezclador Personalizado
           </h3>
 
-          <div style="display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
             
-            <!-- Ruido Terapéutico (Tinnitus Masker) -->
+            <!-- 1. Ruido Terapéutico (Tinnitus Masker) -->
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <label style="font-size: 0.9rem; font-weight: 500;">
                   🛡️ Ruido Acústico (Alivio Acúfenos)
                 </label>
                 <div style="display: flex; gap: 6px;">
-                  <button class="noise-type-btn ${soundEngine.currentNoiseType === 'brown' ? 'active-noise' : ''}" data-type="brown" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">Marrón</button>
-                  <button class="noise-type-btn ${soundEngine.currentNoiseType === 'pink' ? 'active-noise' : ''}" data-type="pink" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">Rosa</button>
-                  <button class="noise-type-btn ${soundEngine.currentNoiseType === 'white' ? 'active-noise' : ''}" data-type="white" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">Blanco</button>
+                  <button class="noise-type-btn ${soundEngine.currentNoiseType === 'brown' ? 'active-noise' : ''}" data-type="brown" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid ${soundEngine.currentNoiseType === 'brown' ? 'var(--accent-calm)' : 'var(--border-color)'}; color: ${soundEngine.currentNoiseType === 'brown' ? 'var(--accent-calm)' : 'var(--text-primary)'}; cursor: pointer;">Marrón</button>
+                  <button class="noise-type-btn ${soundEngine.currentNoiseType === 'pink' ? 'active-noise' : ''}" data-type="pink" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid ${soundEngine.currentNoiseType === 'pink' ? 'var(--accent-calm)' : 'var(--border-color)'}; color: ${soundEngine.currentNoiseType === 'pink' ? 'var(--accent-calm)' : 'var(--text-primary)'}; cursor: pointer;">Rosa</button>
+                  <button class="noise-type-btn ${soundEngine.currentNoiseType === 'white' ? 'active-noise' : ''}" data-type="white" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid ${soundEngine.currentNoiseType === 'white' ? 'var(--accent-calm)' : 'var(--border-color)'}; color: ${soundEngine.currentNoiseType === 'white' ? 'var(--accent-calm)' : 'var(--text-primary)'}; cursor: pointer;">Blanco</button>
                 </div>
               </div>
               <input type="range" class="volume-slider" data-layer="noise" min="0" max="1" step="0.01" value="${soundEngine.volumes.noise}" style="width: 100%; accent-color: var(--accent-calm);">
             </div>
 
-            <!-- Frecuencia Hz / Solfeggio -->
+            <!-- 2. Frecuencia Hz / Solfeggio -->
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                 <label style="font-size: 0.9rem; font-weight: 500;">
                   ✨ Frecuencia Armónica (${soundEngine.currentHz} Hz)
                 </label>
                 <div style="display: flex; gap: 6px;">
-                  <button class="hz-btn ${soundEngine.currentHz === 432 ? 'active-hz' : ''}" data-hz="432" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">432 Hz</button>
-                  <button class="hz-btn ${soundEngine.currentHz === 528 ? 'active-hz' : ''}" data-hz="528" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">528 Hz</button>
-                  <button class="hz-btn ${soundEngine.currentHz === 639 ? 'active-hz' : ''}" data-hz="639" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); cursor: pointer;">639 Hz</button>
+                  <button class="hz-btn ${soundEngine.currentHz === 432 ? 'active-hz' : ''}" data-hz="432" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid ${soundEngine.currentHz === 432 ? 'var(--accent-calm)' : 'var(--border-color)'}; color: ${soundEngine.currentHz === 432 ? 'var(--accent-calm)' : 'var(--text-primary)'}; cursor: pointer;">432 Hz</button>
+                  <button class="hz-btn ${soundEngine.currentHz === 528 ? 'active-hz' : ''}" data-hz="528" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid ${soundEngine.currentHz === 528 ? 'var(--accent-calm)' : 'var(--border-color)'}; color: ${soundEngine.currentHz === 528 ? 'var(--accent-calm)' : 'var(--text-primary)'}; cursor: pointer;">528 Hz</button>
+                  <button class="hz-btn ${soundEngine.currentHz === 639 ? 'active-hz' : ''}" data-hz="639" style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; background: var(--bg-primary); border: 1px solid ${soundEngine.currentHz === 639 ? 'var(--accent-calm)' : 'var(--border-color)'}; color: ${soundEngine.currentHz === 639 ? 'var(--accent-calm)' : 'var(--text-primary)'}; cursor: pointer;">639 Hz</button>
                 </div>
               </div>
               <input type="range" class="volume-slider" data-layer="hz" min="0" max="1" step="0.01" value="${soundEngine.volumes.hz}" style="width: 100%; accent-color: var(--accent-calm);">
             </div>
 
-            <!-- Lluvia Nocturna -->
+            <!-- 3. Lluvia Nocturna -->
             <div>
               <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                 <label style="font-size: 0.9rem; font-weight: 500;">🌧️ Lluvia Nocturna Suave</label>
               </div>
               <input type="range" class="volume-slider" data-layer="rain" min="0" max="1" step="0.01" value="${soundEngine.volumes.rain}" style="width: 100%; accent-color: var(--accent-calm);">
-            </div>
-
-            <!-- Olas del Mar -->
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <label style="font-size: 0.9rem; font-weight: 500;">🌊 Olas de Mar Cósmicas</label>
-              </div>
-              <input type="range" class="volume-slider" data-layer="ocean" min="0" max="1" step="0.01" value="${soundEngine.volumes.ocean}" style="width: 100%; accent-color: var(--accent-calm);">
-            </div>
-
-            <!-- Ondas Binaurales Delta -->
-            <div>
-              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <label style="font-size: 0.9rem; font-weight: 500;">🧠 Ondas Binaurales Delta (Sueño)</label>
-              </div>
-              <input type="range" class="volume-slider" data-layer="binaural" min="0" max="1" step="0.01" value="${soundEngine.volumes.binaural}" style="width: 100%; accent-color: var(--accent-calm);">
             </div>
 
           </div>
@@ -254,7 +235,9 @@ export class SoundsView {
         // Actualizar sliders en pantalla
         this.container.querySelectorAll('.volume-slider').forEach((slider) => {
           const layer = slider.dataset.layer;
-          slider.value = soundEngine.volumes[layer];
+          if (soundEngine.volumes[layer] !== undefined) {
+            slider.value = soundEngine.volumes[layer];
+          }
         });
       });
     });

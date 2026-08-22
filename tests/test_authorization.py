@@ -37,7 +37,7 @@ class TestCrossUserDiaryAndAIIsolation:
         attack_resp = await client.post(
             f"/api/v1/ai/diary/{user_a_entry_id}/chat",
             headers=user_b_headers,
-            json={"content": "test message", "selected_agents": ["empathetic_listener"]},
+            json={"content": "test message", "selected_agents": ["tough_coach"]},
         )
         assert attack_resp.status_code == 404, (
             f"Expected 404 Not Found to prevent data leakage, got: {attack_resp.status_code}"

@@ -1,17 +1,12 @@
 """
-AI Feedback Engine – Multi-Agent Chat Therapy Room.
+AI Feedback Engine for the Therapy Room.
 
-Supported agent types:
-  • empathetic_listener   – warm, compassionate reflection
-  • tough_coach           – direct, no-nonsense accountability
-  • sleep_analyst         – links entry themes to sleep quality
-  • mindfulness_guide     – meditation / breathing suggestions
-  • productivity_mentor   – focus & energy management tips
+The current active contract exposes three personas:
+  - tough_coach
+  - sleep_analyst
+  - productivity_mentor
 
-Security:
-  • PII is scrubbed before sending text to external AI APIs.
-  • AI feedback is encrypted before storage (same AES-256-GCM vault).
-  • Each persona has an immutable system prompt the user cannot override.
+Sensitive text is scrubbed before being transmitted to external providers.
 """
 
 from __future__ import annotations
@@ -29,45 +24,46 @@ from sqlalchemy.orm import selectinload
 from app.core.config import settings
 from app.core.security import decrypt_text, encrypt_text, get_current_user_id
 from app.db.database import get_db
-from app.db.models import DiaryMessage, DiaryEntry
+from app.db.models import DiaryEntry, DiaryMessage
 from app.schemas.diary import AIChatRequest, DiaryMessageResponse
 
 logger = logging.getLogger("sleepwell.ai")
 
 router = APIRouter(prefix="/ai", tags=["AI Feedback"])
 
-# ── Agent Type Literal ───────────────────────────────────────────────────────
+AgentType = Literal["tough_coach", "sleep_analyst", "productivity_mentor"]
 
-AgentType = Literal[
-    "empathetic_listener",
-    "tough_coach",
-    "sleep_analyst",
-    "mindfulness_guide",
-    "productivity_mentor",
+ACTIVE_AGENTS: list[dict[str, str]] = [
+    {
+        "type": "tough_coach",
+        "name": "Coach Estricto",
+        "description": "Direct feedback, accountability, and practical next steps.",
+        "icon": "🧭",
+    },
+    {
+        "type": "sleep_analyst",
+        "name": "Especialista de Sueño",
+        "description": "Sleep patterns, recovery, and evening routine guidance.",
+        "icon": "🌙",
+    },
+    {
+        "type": "productivity_mentor",
+        "name": "Mentor Productividad",
+        "description": "Focus, planning, and energy-management advice.",
+        "icon": "⚡",
+    },
 ]
 
-# ── Immutable System Prompts (cannot be overridden by users) ─────────────────
-
 _SYSTEM_PROMPTS: dict[str, str] = {
-    "empathetic_listener": (
-        "You are a warm, compassionate listener. The user has shared their feelings. "
-        "Reflect their feelings back to them with empathy, validate their emotions, and offer "
-        "gentle encouragement. Keep your response to 1-2 short paragraphs. Do not give advice unless asked."
-    ),
     "tough_coach": (
         "You are a direct, results-oriented life coach. The user has shared their feelings. "
-        "Identify patterns of self-sabotage or avoidance, then provide clear, actionable steps "
-        "to improve. Be honest but not harsh. Keep it to 2-3 bullet points."
+        "Identify patterns of avoidance or self-sabotage, then provide clear, actionable steps "
+        "to improve. Be honest but not harsh. Keep it concise."
     ),
     "sleep_analyst": (
         "You are a sleep science expert. The user has shared their feelings. "
         "Analyze how the emotions, stress levels, or activities described might affect their sleep quality. "
         "Suggest 1-2 science-backed adjustments to their evening routine. Keep it concise."
-    ),
-    "mindfulness_guide": (
-        "You are a mindfulness and meditation teacher. The user has shared their feelings. "
-        "Suggest a specific breathing technique, body scan, or short meditation practice that "
-        "addresses their emotional state. Provide simple, step-by-step instructions."
     ),
     "productivity_mentor": (
         "You are a productivity and focus coach. The user has shared their feelings. "
@@ -75,8 +71,6 @@ _SYSTEM_PROMPTS: dict[str, str] = {
         "to improve their workflow and mental clarity. Be specific and actionable."
     ),
 }
-
-# ── PII Scrubber ─────────────────────────────────────────────────────────────
 
 _PII_PATTERNS = [
     (re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"), "[EMAIL]"),
@@ -90,38 +84,44 @@ _PII_PATTERNS = [
 
 
 def _scrub_pii(text: str) -> str:
-    """Remove personally identifiable information before sending to external AI."""
     for pattern, replacement in _PII_PATTERNS:
         text = pattern.sub(replacement, text)
     return text
 
 
-# ── AI Call (provider-agnostic) ──────────────────────────────────────────────
+def _message_to_response(message: DiaryMessage) -> DiaryMessageResponse:
+    return DiaryMessageResponse(
+        id=message.id,
+        role=message.role,
+        agent_type=message.agent_type,
+        content=decrypt_text(message.encrypted_content),
+        created_at=message.created_at,
+    )
 
-async def _call_ai(system_prompt: str, user_content: str) -> str:
-    """Call the configured AI provider and return the response text."""
-    provider = settings.AI_PROVIDER.lower()
-    scrubbed = _scrub_pii(user_content)
 
-    if not settings.AI_API_KEY and provider != "mock":
-        return "[AI feedback unavailable – no API key configured. Set AI_API_KEY in your .env file.]"
+def _entry_not_found() -> HTTPException:
+    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Diary entry not found")
 
-    try:
-        if provider == "gemini":
-            return await _call_gemini(system_prompt, scrubbed)
-        elif provider == "openai":
-            return await _call_openai(system_prompt, scrubbed)
-        elif provider == "anthropic":
-            return await _call_anthropic(system_prompt, scrubbed)
-        else:
-            return f"[Mock AI]\nSystem: {system_prompt[:40]}...\nContent: {scrubbed[:40]}..."
-    except Exception as e:
-        logger.error(f"AI API Error: {e}")
-        return "[AI service is currently unavailable. Please try again later.]"
+
+async def _load_owned_entry(
+    entry_id: int,
+    user_id: int,
+    db: AsyncSession,
+) -> DiaryEntry:
+    result = await db.execute(
+        select(DiaryEntry)
+        .where(DiaryEntry.id == entry_id, DiaryEntry.user_id == user_id)
+        .options(selectinload(DiaryEntry.messages))
+    )
+    entry = result.scalar_one_or_none()
+    if not entry:
+        raise _entry_not_found()
+    return entry
 
 
 async def _call_gemini(system_prompt: str, content: str) -> str:
     import httpx
+
     url = f"https://generativelanguage.googleapis.com/v1beta/models/{settings.AI_MODEL}:generateContent"
     payload = {
         "system_instruction": {"parts": [{"text": system_prompt}]},
@@ -131,11 +131,13 @@ async def _call_gemini(system_prompt: str, content: str) -> str:
     async with httpx.AsyncClient(timeout=30.0) as client:
         resp = await client.post(url, json=payload, params={"key": settings.AI_API_KEY})
         resp.raise_for_status()
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        data = resp.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
 
 
 async def _call_openai(system_prompt: str, content: str) -> str:
     import httpx
+
     payload = {
         "model": settings.AI_MODEL,
         "messages": [
@@ -156,6 +158,7 @@ async def _call_openai(system_prompt: str, content: str) -> str:
 
 async def _call_anthropic(system_prompt: str, content: str) -> str:
     import httpx
+
     payload = {
         "model": settings.AI_MODEL,
         "max_tokens": 800,
@@ -175,19 +178,53 @@ async def _call_anthropic(system_prompt: str, content: str) -> str:
         return resp.json()["content"][0]["text"]
 
 
-# ── Concurrent Agent Execution ───────────────────────────────────────────────
+async def _call_ai(system_prompt: str, user_content: str) -> str:
+    provider = settings.AI_PROVIDER.lower()
+    scrubbed = _scrub_pii(user_content)
+
+    if provider != "mock" and not settings.AI_API_KEY:
+        return "[AI feedback unavailable – no API key configured.]"
+
+    try:
+        if provider == "gemini":
+            return await _call_gemini(system_prompt, scrubbed)
+        if provider == "openai":
+            return await _call_openai(system_prompt, scrubbed)
+        if provider == "anthropic":
+            return await _call_anthropic(system_prompt, scrubbed)
+        return f"[Mock AI]\nSystem: {system_prompt[:40]}...\nContent: {scrubbed[:40]}..."
+    except Exception as exc:
+        logger.error("AI API error: %s", exc)
+        return "[AI service is currently unavailable. Please try again later.]"
+
 
 async def _get_agent_reply(agent_type: str, conversation_text: str) -> tuple[str, str]:
-    """Calls the AI for a specific agent and returns (agent_type, response_text)."""
     if agent_type not in _SYSTEM_PROMPTS:
         return agent_type, "[Unknown agent type]"
-    
-    system_prompt = _SYSTEM_PROMPTS[agent_type] + "\n\nIMPORTANT: Read the conversation history and respond to the latest message as this specific persona."
+
+    system_prompt = _SYSTEM_PROMPTS[agent_type]
     reply = await _call_ai(system_prompt, conversation_text)
     return agent_type, reply
 
 
-# ── Endpoint ─────────────────────────────────────────────────────────────────
+@router.get("/agents", summary="List the active Therapy Room personas")
+async def list_agents() -> dict[str, list[dict[str, str]]]:
+    return {"agents": ACTIVE_AGENTS}
+
+
+@router.get(
+    "/diary/{entry_id}/chat",
+    response_model=list[DiaryMessageResponse],
+    summary="List AI chat messages for a diary entry",
+)
+async def list_chat_messages(
+    entry_id: int,
+    user_id: int = Depends(get_current_user_id),
+    db: AsyncSession = Depends(get_db),
+):
+    entry = await _load_owned_entry(entry_id, user_id, db)
+    return [_message_to_response(message) for message in entry.messages]
+
 
 @router.post(
     "/diary/{entry_id}/chat",
@@ -201,83 +238,40 @@ async def chat_with_agents(
     user_id: int = Depends(get_current_user_id),
     db: AsyncSession = Depends(get_db),
 ):
-    # 1. Verify ownership & load existing messages
-    result = await db.execute(
-        select(DiaryEntry)
-        .where(DiaryEntry.id == entry_id, DiaryEntry.user_id == user_id)
-        .options(selectinload(DiaryEntry.messages))
-    )
-    entry = result.scalar_one_or_none()
-    if not entry:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Diary entry not found")
+    entry = await _load_owned_entry(entry_id, user_id, db)
 
-    # 2. Save User's Message
     user_msg = DiaryMessage(
         diary_entry_id=entry.id,
         role="user",
-        encrypted_content=encrypt_text(payload.content)
+        encrypted_content=encrypt_text(payload.content),
     )
     db.add(user_msg)
-    await db.flush()  # So it gets an ID
+    await db.flush()
 
-    # 3. Build Conversation History Context
-    history_text = "CONVERSATION HISTORY:\n\n"
-    # Optional: Include initial diary entry mood/tags if they exist
+    history_lines: list[str] = []
     if entry.mood:
-        history_text += f"Initial Mood: {entry.mood}\n"
-    
-    for msg in entry.messages:
-        role_label = "User" if msg.role == "user" else f"Agent ({msg.agent_type})"
-        history_text += f"{role_label}: {decrypt_text(msg.encrypted_content)}\n\n"
-    
-    history_text += f"User: {payload.content}\n"
+        history_lines.append(f"Initial Mood: {entry.mood}")
+    for message in entry.messages:
+        role_label = "User" if message.role == "user" else f"Agent ({message.agent_type})"
+        history_lines.append(f"{role_label}: {decrypt_text(message.encrypted_content)}")
+    history_lines.append(f"User: {payload.content}")
+    history_text = "\n\n".join(history_lines)
 
-    # 4. Request AI responses concurrently for selected agents
-    # Deduplicate agents and limit to 5
-    unique_agents = list(set(payload.selected_agents))[:5]
-    
-    tasks = [_get_agent_reply(agent, history_text) for agent in unique_agents]
-    results = await asyncio.gather(*tasks)
+    unique_agents = list(dict.fromkeys(payload.selected_agents))[:5]
+    results = await asyncio.gather(*(_get_agent_reply(agent, history_text) for agent in unique_agents))
 
-    # 5. Save Agent Responses
-    new_agent_messages = []
+    agent_messages: list[DiaryMessage] = []
     for agent_type, reply_text in results:
         agent_msg = DiaryMessage(
             diary_entry_id=entry.id,
             role="agent",
             agent_type=agent_type,
-            encrypted_content=encrypt_text(reply_text)
+            encrypted_content=encrypt_text(reply_text),
         )
         db.add(agent_msg)
-        new_agent_messages.append(agent_msg)
-    
+        agent_messages.append(agent_msg)
+
+    await db.flush()
     await db.commit()
 
-    # 6. Return the newly created messages (user + agents)
-    response_list = [user_msg] + new_agent_messages
-    return [
-        DiaryMessageResponse(
-            id=m.id,
-            role=m.role,
-            agent_type=m.agent_type,
-            content=decrypt_text(m.encrypted_content),
-            created_at=m.created_at
-        )
-        for m in response_list
-    ]
-
-
-@router.get(
-    "/agents",
-    summary="List all available AI agent personas",
-)
-async def list_agents():
-    return {
-        "agents": [
-            {"type": "empathetic_listener", "description": "Warm, compassionate emotional reflection", "icon": "💖"},
-            {"type": "tough_coach", "description": "Direct, accountability-driven coaching", "icon": "🥊"},
-            {"type": "sleep_analyst", "description": "Links diary themes to sleep quality science", "icon": "😴"},
-            {"type": "mindfulness_guide", "description": "Meditation and breathing practice suggestions", "icon": "🧘"},
-            {"type": "productivity_mentor", "description": "Focus and energy management strategies", "icon": "🚀"},
-        ]
-    }
+    return [_message_to_response(user_msg), *(_message_to_response(m) for m in agent_messages)]

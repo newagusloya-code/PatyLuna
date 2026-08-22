@@ -11,6 +11,6 @@ router.add_api_route("/users/me", auth.get_me, methods=["GET"], response_model=a
 
 router.include_router(auth.router)
 router.include_router(diary.router)
+router.include_router(ai.router)
 router.include_router(pomodoro.router)
 router.include_router(sleep.router)
-router.include_router(ai.router)

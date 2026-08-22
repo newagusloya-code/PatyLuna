@@ -92,7 +92,7 @@ export class DashboardView {
             <div style="font-size: 1.5rem; color: var(--accent-calm);">›</div>
           </div>
           <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 20px;">
-            Accede al mezclador completo para alivio de tinnitus y ondas cerebrales para el sueño.
+            Accede al mezclador completo para alivio de tinnitus, tonos armónicos y relajación nocturna.
           </p>
 
           <!-- Opciones Rápidas en Dashboard -->

@@ -152,11 +152,16 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 # Check if the frontend build directory exists
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent
-FRONTEND_DIST = os.environ.get(
-    "FRONTEND_DIST",
-    str(_PROJECT_ROOT / "frontend" / "dist") if (_PROJECT_ROOT / "frontend" / "dist").exists() else os.path.join(os.getcwd(), "frontend", "dist")
-)
+# In Docker: /app/frontend/dist
+# In dev: ./frontend/dist or ../frontend/dist
+FRONTEND_DIST = os.environ.get("FRONTEND_DIST", "/app/frontend/dist")
+
+# Fallback to relative paths if /app doesn't exist (local dev)
+if not os.path.exists(FRONTEND_DIST):
+    _PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    FRONTEND_DIST = str(_PROJECT_ROOT / "frontend" / "dist")
+    if not os.path.exists(FRONTEND_DIST):
+        FRONTEND_DIST = os.path.join(os.getcwd(), "frontend", "dist")
 
 if os.path.exists(FRONTEND_DIST):
     # Mount static files (JS, CSS, images)

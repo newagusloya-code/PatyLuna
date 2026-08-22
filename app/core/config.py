@@ -51,6 +51,12 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # ── AI / Therapy Room ───────────────────────────────────────────────
+    AI_PROVIDER: str = "mock"  # gemini | openai | anthropic | mock
+    AI_API_KEY: str = ""
+    AI_MODEL: str = "gemini-3.6-flash"
+    LIVE_AI_MODEL: str = "gemini-3.1-flash-live-preview"
+
     # ── Encryption (AES-256-GCM for diary entries) ───────────────────────
     # Generate with: python -c "import os; print(os.urandom(32).hex())"
     ENCRYPTION_KEY: str = ""
@@ -67,11 +73,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_DEFAULT: str = "60/minute"
     RATE_LIMIT_AUTH: str = "10/minute"
 
-    # ── AI Agents ────────────────────────────────────────────────────────
-    AI_PROVIDER: str = "gemini"  # gemini | openai | anthropic | local
-    AI_API_KEY: str = ""
-    AI_MODEL: str = "gemini-2.5-flash"
+
 
 
 settings = Settings()
-

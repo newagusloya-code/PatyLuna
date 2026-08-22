@@ -259,7 +259,7 @@ export class SleepView {
             <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px;">Atmósfera de Sonido:</label>
             <select id="sleep-sound-select" style="width: 100%; padding: 10px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.95rem;">
               <option value="tinnitus">Alivio Tinnitus (Ruido Marrón + 528 Hz + Lluvia)</option>
-              <option value="sueno432">Sueño Cósmico 432 Hz + Olas del Mar</option>
+              <option value="sueno432">Sueño Cósmico 432 Hz & Ruido Marrón</option>
               <option value="lluvia_paz">Lluvia Nocturna Suave & Ruido Rosa</option>
               <option value="paz528">Frecuencia de Sanación 528 Hz</option>
               <option value="none">En Silencio (Sin sonido)</option>

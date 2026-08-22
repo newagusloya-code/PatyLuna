@@ -27,12 +27,10 @@ class TestAIEngine:
         agents = data["agents"]
         assert isinstance(agents, list), f"Expected list of agents, got: {type(agents)}"
 
-        # The API contract specifies exactly these 5 supported persona types
+        # The API contract specifies exactly these 3 supported persona types
         expected_agents = {
-            "empathetic_listener",
             "tough_coach",
             "sleep_analyst",
-            "mindfulness_guide",
             "productivity_mentor",
         }
         assert len(agents) == len(expected_agents), (
@@ -65,13 +63,13 @@ class TestAIEngine:
         )
         entry_id = entry["id"]
 
-        # 3. Post a chat message and select empathetic_listener
+        # 3. Post a chat message and select tough_coach
         ai_resp = await client.post(
             f"/api/v1/ai/diary/{entry_id}/chat",
             headers=headers,
             json={
                 "content": "I worked 14 hours and feel exhausted.",
-                "selected_agents": ["empathetic_listener"]
+                "selected_agents": ["tough_coach"]
             },
         )
         assert ai_resp.status_code == 201, f"AI chat request failed: {ai_resp.text}"
@@ -87,7 +85,7 @@ class TestAIEngine:
 
         agent_msg = resp_data[1]
         assert agent_msg["role"] == "agent"
-        assert agent_msg["agent_type"] == "empathetic_listener"
+        assert agent_msg["agent_type"] == "tough_coach"
         assert len(agent_msg["content"]) > 0
 
         # 4. Verify messages are attached to the diary entry GET response

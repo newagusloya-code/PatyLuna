@@ -1,6 +1,6 @@
 # Paty Luna (SleepWell) 🌙 🎧
 
-Paty Luna is a full-stack wellness app with a Therapy Room powered by five AI agents - empathetic listener, tough coach, sleep analyst, mindfulness guide, and productivity mentor - plus a private diary, therapeutic audio, sleep tools, and Pomodoro sessions. The backend uses FastAPI, SQLAlchemy, and JWT authentication; the frontend is a Vanilla JavaScript SPA bundled with Vite.
+Paty Luna is a full-stack wellness app with a Therapy Room powered by five AI agents - empathetic listener, tough coach, sleep analyst, mindfulness guide, and productivity mentor - plus a private diary, therapeutic audio, sleep tools, and Pomodoro sessions. The backend uses FastAPI, SQLAlchemy, and JWT authentication; the frontend is a Vanilla JavaScript SPA bundled with Vite. (Until next update maybe I will upload the agents again.) 
 
 ## Features
 
@@ -43,6 +43,9 @@ cd frontend
 npm install
 npm run dev
 ```
+
+##Fact before you read 
+THE APP HAS NO LONGER AGENTS AVAILABLE UNTIL NEXT UPDATE, I REMOVE IT FOR THE FRONTEND AND PROJECT UNTIL I HAVE MORE REVENUE AND BE ABLE TO SUPPORT THE API SERVICE.
 
 The Therapy Room is available at `http://localhost:3000/#/therapy` after signing in. It loads the five agents from `/api/v1/ai/agents`; a conversation creates a diary entry and uses `/api/v1/ai/diary/{id}/chat`. Set `AI_PROVIDER=mock` for a local smoke test without an API key. If the API is hosted separately, set `VITE_API_BASE_URL` to its public URL before building.
 

@@ -79,12 +79,15 @@ class DiaryEntry(Base):
 
     # Relationships
     author: Mapped["User"] = relationship(back_populates="diary_entries")
-    messages: Mapped[list["DiaryMessage"]] = relationship(back_populates="diary_entry", cascade="all, delete-orphan", order_by="DiaryMessage.created_at")
+    messages: Mapped[list["DiaryMessage"]] = relationship(
+        back_populates="diary_entry",
+        cascade="all, delete-orphan",
+        order_by="DiaryMessage.created_at",
+    )
 
     __table_args__ = (
         Index("ix_diary_user_created", "user_id", "created_at"),
     )
-
 
 # ────────────────────────────────────────────────────────────────────────────
 # Diary Message (Chat thread)
@@ -96,12 +99,9 @@ class DiaryMessage(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     diary_entry_id: Mapped[int] = mapped_column(ForeignKey("diary_entries.id", ondelete="CASCADE"), nullable=False)
 
-    role: Mapped[str] = mapped_column(String(16), nullable=False) # "user" or "agent"
-    agent_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True) # e.g. "tough_coach", null if user
-
-    # Content is AES-256-GCM encrypted
+    role: Mapped[str] = mapped_column(String(16), nullable=False)
+    agent_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     encrypted_content: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
-
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     # Relationships

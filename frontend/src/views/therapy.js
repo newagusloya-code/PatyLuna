@@ -93,10 +93,8 @@ export class TherapyView {
   
   getAgentName(type) {
     const map = {
-      'empathetic_listener': 'Escucha Empática',
       'tough_coach': 'Coach Estricto',
-      'sleep_analyst': 'Analista de Sueño',
-      'mindfulness_guide': 'Guía Mindfulness',
+      'sleep_analyst': 'Especialista de Sueño',
       'productivity_mentor': 'Mentor Productividad'
     };
     return map[type] || type;
